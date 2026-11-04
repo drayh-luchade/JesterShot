@@ -115,6 +115,7 @@ function launchShot(w, start, dir, speed) {
   body.mesh = mesh;
   body.born = performance.now();
   shots.push({ mesh, body });
+  if (w.pierce) initPierceShot(body, dir);
   if (shots.length > MAX_SHOTS) removeShot(shots.shift());
 }
 

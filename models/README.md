@@ -15,6 +15,8 @@ Each file here registers one model into `window.MODEL_DATA.<key>` (a plain scrip
 | `px`  | base64 of 4-bit palette indices, two pixels per byte (low nibble first), `w*h/2` bytes |
 
 ## Adding a model
+0. Easiest: `python3 tools/glb_to_model.py thing.glb key [--center]` writes `models/<key>.js` for you (single mesh, one texture; needs Pillow). Then do steps 2–3.
+   Use `--center` for anything that is fired or spun, so it rotates about its middle.
 1. Create `models/<key>.js`:
    `window.MODEL_DATA = window.MODEL_DATA || {}; window.MODEL_DATA.<key> = { "pos": "...", "uv": "...", "idx": "...", "w": 128, "h": 128, "pal": "...", "px": "..." };`
 2. Add `<script src="models/<key>.js"></script>` in `index.html`, with the other model lines.

@@ -18,6 +18,13 @@ const WEAPONS = {
                 dark: 0x2f7d32, light: 0x7bc47f, stripe: '#2f7d32', gunScale: 2.2 },
   takoyaki:   { name: 'Takoyaki', tag: 'sticky sauce · glides', radius: 0.26, mass: 0.4, speed: 20, cooldown: 160, slime: true, model: 'takoyaki', modelScale: 15.5, slimeColor: 0x4a2410,
                 dark: 0x6b3a1a, light: 0xb87a3a, stripe: '#b5651d', gunScale: 1.8 },
+  mushroom:   { name: 'Shroom Spike', tag: 'pierces 5 sheets · leaves holes', radius: 0.3, mass: 0.6, speed: 70, cooldown: 450, model: 'mushroom', modelScale: 2.2,
+                pierce: 5,          // sheets of paper it can cross before it stops (a hollow block = 2 sheets: in and out)
+                hole: 0.5,          // hole radius in world units (scaled by the paper's tearSize, capped for small blocks)
+                wear: 0.04,         // damage added to a block per sheet pierced
+                nudge: 0.04,        // tiny shove per sheet, as a share of its momentum (0 = none)
+                spin: 16,           // rad/s about its own length (cosmetic)
+                dark: 0x9a2a2a, light: 0xd9534f, stripe: '#c0392b', gunScale: 1.2 },
 };
 
 /* Paper types. density = mass multiplier, dent = dent depth, tear = tear-threshold multiplier (higher = harder to rip),

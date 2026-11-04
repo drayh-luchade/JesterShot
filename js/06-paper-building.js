@@ -107,7 +107,7 @@ class PaperBuilding extends THREE.Group {
       b.touched = true;
       this._award(PTS_GROUND, 'Floored');
     }
-    if (other.weapon && other.weapon.slime) return;                  // boba does its own, gentler damage (see updatePearls)
+    if (other.weapon && (other.weapon.slime || other.weapon.pierce)) return;                  // boba does its own, gentler damage (see updatePearls)
     let sev = Math.abs(c.getImpactVelocityAlongNormal()) * (mo > 0 ? Math.sqrt(mo / (mo + mb)) : 1);
     if (!other.isPea) sev *= 0.6;                                    // falls & block-on-block are gentler than a pea
     if (sev < MIN_SEV) return;

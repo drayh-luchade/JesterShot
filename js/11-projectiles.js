@@ -37,11 +37,13 @@ function updateShots() {
     if (w.bounces && !p.body.exploded && now - p.body.born > 8000) { p.body.exploded = true; blasts.push({ body: p.body, ex: w.burst }); }
     if (w.slime && !p.body.done && now - p.body.born > 6000) { p.body.done = true; slimeKills.push(p.body); }   // flew off somewhere
   }
+  updatePierce();                                                     // Shroom Spike: holes through the paper it just crossed
 }
 
 /* Projectile collision listener: missiles detonate; other shots give the block an extra off-centre shock. */
 function onShotHit(shot, e) {
   const w = shot.weapon;
+  if (w.pierce) { pierceContact(shot, e); return; }                  // Shroom Spike: see 11b-pierce.js
   if (w.explosion) {
     if (!shot.exploded) { shot.exploded = true; blasts.push({ body: shot, ex: w.explosion }); }
     return;                                                           // handled after the step
