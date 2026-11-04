@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Paper Tower — Japan Mode (konbini back room)</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="ui">
+  <button id="rebuild">Rebuild</button>
+  <button id="shove">Shove (F)</button>
+  <button id="fire">Fire / Place</button>
+  <button id="mode">Build (B)</button>
+  <button id="addTower">+ Tower</button>
+  <button id="clear">Clear board</button>
+</div>
+<div id="cross"></div>
+<div id="score"><div class="label">SCORE</div><div id="scoreVal">0</div><div id="disturbed"></div><div id="pops"></div></div>
+<div id="weapons"></div>
+<div id="palette"></div>
+<div id="strength"><label for="pw">Strength <b id="pwVal">×1.00</b></label><input id="pw" type="range" min="0.5" max="3" step="0.05" value="1">
+  <div id="spreadRow"><label for="sp">Tri-shot spread <b id="spVal"></b></label><input id="sp" type="range" min="0" max="0.1" step="0.005" value="0.02"></div></div>
+<div id="dragCard"></div>
+<div id="placeInfo"></div>
+<div id="toast"></div>
+<div id="pad">
+  <button class="pb" data-k="KeyW" title="Forward (W)" style="grid-area:1/2">▲</button>
+  <button class="pb" data-k="KeyA" data-alt="ArrowLeft" title="Left (A / ←)" style="grid-area:2/1">◀</button>
+  <div id="padc">
+    <button class="pb" data-k="Space" data-alt="KeyE ArrowUp PageUp" title="Fly up (Space / E / ↑)">▲</button>
+    <button class="pb" data-k="KeyC" data-alt="KeyQ ArrowDown PageDown" title="Fly down (C / Q / ↓)">▼</button>
+  </div>
+  <button class="pb" data-k="KeyD" data-alt="ArrowRight" title="Right (D / →)" style="grid-area:2/3">▶</button>
+  <button class="pb" data-k="KeyS" title="Back (S)" style="grid-area:3/2">▼</button>
+</div>
+<div id="hint">Hold left-click + drag: look · WASD: move · Space / E / ↑: up · C / Q / ↓: down · Shift: fast · Right-click: fire · 1 / 2 / 3 or wheel: weapon · F: shove</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<!-- 3D models: one file per model, each fills window.MODEL_DATA.<key>. See models/README.md to add more. -->
+<script src="models/cow.js"></script>
+<script src="models/calf.js"></script>
+<script src="models/banana.js"></script>
+<script src="models/algae.js"></script>
+<script src="models/takoyaki.js"></script>
+<script src="models/watermelon.js"></script>
+
+<!-- Game code. Order matters: plain scripts sharing one scope, run top to bottom (module + defer scripts execute in page order). -->
+<script type="module" src="js/00-cannon.js"></script>
+<script defer src="js/01-config.js"></script>
+<script defer src="js/02-shapes.js"></script>
+<script defer src="js/03-model-loader.js"></script>
+<script defer src="js/04-structures.js"></script>
+<script defer src="js/05-sheet.js"></script>
+<script defer src="js/06-paper-building.js"></script>
+<script defer src="js/07-scene.js"></script>
+<script defer src="js/08-room.js"></script>
+<script defer src="js/09-physics-towers.js"></script>
+<script defer src="js/10-shooter-camera.js"></script>
+<script defer src="js/11-projectiles.js"></script>
+<script defer src="js/12-boba.js"></script>
+<script defer src="js/13-props.js"></script>
+<script defer src="js/14-watermelon.js"></script>
+<script defer src="js/15-explosions-aiming.js"></script>
+<script defer src="js/16-hud.js"></script>
+<script defer src="js/17-builder.js"></script>
+<script defer src="js/18-ui-loop.js"></script>
+</body>
+</html>
