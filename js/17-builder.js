@@ -141,8 +141,9 @@ function structure() {                                                  // what 
     structGhost.clear();
     for (const p of curStruct.parts) {
       if (p.shape === 'model') {                                       // show the actual model, tinted by the ghost colour
-        const g = instantiateModel(p.model, p.scale, false);
+        const g = instantiateModel(p.model, 1, false);
         if (g) {
+          const md = MODELS[p.model].dims; g.children[0].scale.set(p.dims[0] / md[0], p.dims[1] / md[1], p.dims[2] / md[2]);   // fit the part's box
           g.traverse(o => { if (o.isMesh) { o.material.dispose(); o.material = ghostMat; } });
           g.position.set(...p.pos); g.rotation.y = p.yaw * Math.PI / 2;
           structGhost.add(g);
@@ -280,8 +281,7 @@ function placeBlock() {
         return { shape: pt.shape, model: pt.model, scale: pt.scale, dims: pt.dims, x: p.x + rx, y: p.y + pt.pos[1], z: p.z + rz, yaw: (pt.yaw + q) * Math.PI / 2,
                  paper: pt.role === 'wall' ? game.paper : ROLE_PAPER[pt.role], color: pt.color };
       });
-      const id = workshop.addStructure(mapped.filter(x => !x.model), st.name);
-      mapped.filter(x => x.model).forEach(x => addProp(x, id, st.name));
+      workshop.addStructure(mapped, st.name);                           // model parts are deformable blocks too (see ModelSheet)
     }
     toast(`Placed: ${st.name}`);
     game.seed = (game.seed * 1103515245 + 12345) & 0x7fffffff;           // the next copy gets a new variation

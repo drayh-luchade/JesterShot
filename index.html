@@ -38,13 +38,24 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <!-- 3D models: one file per model, each fills window.MODEL_DATA.<key>. See models/README.md to add more. -->
-<script src="models/cow.js"></script>
-<script src="models/calf.js"></script>
 <script src="models/banana.js"></script>
 <script src="models/algae.js"></script>
 <script src="models/takoyaki.js"></script>
 <script src="models/watermelon.js"></script>
 <script src="models/mushroom.js"></script>
+<script src="models/bathhouse.js"></script>
+<script src="models/bookstore.js"></script>
+<script src="models/cafe.js"></script>
+<script src="models/castle.js"></script>
+<script src="models/farmhouse.js"></script>
+<script src="models/lighthouse.js"></script>
+<script src="models/parkEntrance.js"></script>
+<script src="models/radioTower.js"></script>
+<script src="models/silo.js"></script>
+<script src="models/tallLighthouse.js"></script>
+<script src="models/teahouse.js"></script>
+<script src="models/wallLong.js"></script>
+<script src="models/windmill.js"></script>
 
 <!-- Game code. Order matters: plain scripts sharing one scope, run top to bottom (module + defer scripts execute in page order). -->
 <script type="module" src="js/00-cannon.js"></script>
@@ -53,6 +64,7 @@
 <script defer src="js/03-model-loader.js"></script>
 <script defer src="js/04-structures.js"></script>
 <script defer src="js/05-sheet.js"></script>
+<script defer src="js/05b-model-sheet.js"></script>
 <script defer src="js/06-paper-building.js"></script>
 <script defer src="js/06b-corners.js"></script>
 <script defer src="js/07-scene.js"></script>

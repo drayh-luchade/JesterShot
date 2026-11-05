@@ -12,7 +12,13 @@ Each file here registers one model into `window.MODEL_DATA.<key>` (a plain scrip
 | `idx` | base64 of Uint16 triangle indices (so max 65,535 vertices per model) |
 | `w`, `h` | texture size in pixels |
 | `pal` | base64 of 16 RGB colours (48 bytes) |
+| `pala` | (optional) base64 of 16 bytes: 255 = solid, 0 = see-through, per palette colour |
 | `px`  | base64 of 4-bit palette indices, two pixels per byte (low nibble first), `w*h/2` bytes |
+
+## Buildings
+A model used as a building (see `js/04-structures.js`) becomes one deformable block: its bounding box is the collision box, and the model, cut into
+smaller triangles, is the skin that dents, tears and sags. Models are stretched to the `B(model, w, h, d)` size you give, so any building can be made fatter or thinner.
+The optional `pala` field marks palette colours that are see-through (windows, lattices, fences).
 
 ## Adding a model
 0. Easiest: `python3 tools/glb_to_model.py thing.glb key [--center]` writes `models/<key>.js` for you (single mesh, one texture; needs Pillow). Then do steps 2–3.

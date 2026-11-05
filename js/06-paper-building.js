@@ -54,7 +54,7 @@ class PaperBuilding extends THREE.Group {
     if (this.world) this.blocks.forEach(b => this._createBody(b));
   }
 
-  _addBlock(sx, sy, sz, x, y, z, paper, color, windows, rand, rot = [0, 0, 0], shape = 'cube') {
+  _addBlock(sx, sy, sz, x, y, z, paper, color, windows, rand, rot = [0, 0, 0], shape = 'cube', model = null) {
     const outerMat = new THREE.MeshLambertMaterial({
       color, flatShading: true, map: getTex(PAPER[paper].tex), shadowSide: THREE.DoubleSide,
     });
@@ -63,7 +63,14 @@ class PaperBuilding extends THREE.Group {
     });
     this._materials.push(outerMat, innerMat);
 
-    const sheet = new Sheet(outerMat, innerMat, this.edgeMat, shape);
+    let sheet;
+    if (model && MODELS[model]) {                                    // a Katamari model as the skin: same box body, same dents / tears / sag
+      const m = MODELS[model], tint = m.mat.clone();
+      tint.color.setHex(0xffffff);
+      const back = new THREE.MeshLambertMaterial({ map: m.mat.map, color: 0x6f6f6f, side: THREE.BackSide, alphaTest: m.mat.alphaTest });
+      this._materials.push(tint, back);
+      sheet = new ModelSheet(model, tint, back, this.edgeMat, [sx, sy, sz]);
+    } else sheet = new Sheet(outerMat, innerMat, this.edgeMat, shape);
     const mesh = new THREE.Group();
     mesh.add(sheet.outer, sheet.inner, sheet.edges);        // children[0] must stay the outer mesh (raycasting)
     mesh.scale.set(sx, sy, sz);
@@ -73,7 +80,7 @@ class PaperBuilding extends THREE.Group {
     this.add(mesh);
 
     const rec = { mesh, sheet, windows: wins, body: null, sx, sy, sz, damage: 0, crush: 0, curY: 1, targetY: 1,
-                  paper: PAPER[paper], owner: this, shape,
+                  paper: PAPER[paper], owner: this, shape, model,
                   moved: false, touched: false, restPos: null, restQuat: null, grounded0: false };
     this.blocks.push(rec);
     return rec;
@@ -229,7 +236,7 @@ class PaperBuilding extends THREE.Group {
   addStructure(parts, name) {
     const id = ++structSeq;
     for (const pt of parts) {
-      const rec = this._addBlock(pt.dims[0], pt.dims[1], pt.dims[2], pt.x, pt.y, pt.z, pt.paper, pt.color, false, null, [0, pt.yaw, 0], pt.shape);
+      const rec = this._addBlock(pt.dims[0], pt.dims[1], pt.dims[2], pt.x, pt.y, pt.z, pt.paper, pt.color, false, null, [0, pt.yaw, 0], pt.model ? 'cube' : pt.shape, pt.model);
       rec.struct = id; rec.structName = name;
       this._createBody(rec);
     }
