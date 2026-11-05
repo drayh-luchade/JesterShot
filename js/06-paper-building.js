@@ -141,6 +141,7 @@ class PaperBuilding extends THREE.Group {
     const T = TEAR_SEV * P.tear;
     const tear = sev > T ? (0.4 + (sev - T) * 0.05) * P.tearSize * k : 0;
     b.sheet.dent(h, tear, b.windows);
+    this.cornerDamage(b, h.c, sev, load);                            // near an edge or corner? it sags (see 06b-corners.js)
 
     // Folding down only comes from hits that land along the block's own axis, and only the block that was actually struck
     // takes the full amount. Stack load and falls (load < 1) mostly dent, instead of pancaking everything underneath.
@@ -165,14 +166,15 @@ class PaperBuilding extends THREE.Group {
       this.armed = true;
     }
     for (const b of this.blocks) {
-      if (Math.abs(b.curY - b.targetY) < 1e-3) continue;
+      if (Math.abs(b.curY - b.targetY) < 1e-3) { if (b.cd) this._cornerStep(b, dt, false); continue; }
       const prev = b.sy * b.curY;
       b.curY += (b.targetY - b.curY) * Math.min(1, dt * 5);
       const hgt = b.sy * b.curY, dh = prev - hgt;
       b.mesh.scale.y = hgt;
       b.sheet.crumple(prev, hgt, Math.min(prev, Math.max(dh * 2, Math.min(prev * 0.6, CRUSH.zone * Math.min(b.sx, b.sz)))));   // fold the top, keep the lower part intact
       const shape = b.body.shapes[0];
-      if (shape.baseVerts) {                                         // convex shapes: rescale vertex heights
+      if (b.cornerHull) { /* its hull is rebuilt below, from the corners */ }
+      else if (shape.baseVerts) {                                         // convex shapes: rescale vertex heights
         shape.vertices.forEach((v, i) => { v.y = shape.baseVerts[i].y * b.curY; });
         shape.computeNormals();
         if (shape.computeEdges) shape.computeEdges();
@@ -191,6 +193,7 @@ class PaperBuilding extends THREE.Group {
       b.body.position.y -= up.y * dh / 2;
       b.body.position.z -= up.z * dh / 2;
       b.body.wakeUp();
+      if (b.cd) this._cornerStep(b, dt, true);
     }
     this._checkMoved();
   }

@@ -13,7 +13,7 @@ function initPierceShot(body, dir) {                                  // called 
   const w = body.weapon;
   body.collisionResponse = false;                                     // reports touches, never pushes or bounces
   body.linearDamping = 0; body.angularDamping = 0;
-  body.quaternion.setFromVectors(new CANNON.Vec3(0, -1, 0), new CANNON.Vec3(dir.x, dir.y, dir.z));   // stem first, cap trailing
+  body.quaternion.setFromVectors(new CANNON.Vec3(0, 1, 0), new CANNON.Vec3(dir.x, dir.y, dir.z));    // cap first, stem trailing
   body.angularVelocity.set(dir.x * w.spin, dir.y * w.spin, dir.z * w.spin);                          // spins about its own length
   body.pierce = { left: w.pierce, dead: false, prev: new THREE.Vector3(body.position.x, body.position.y, body.position.z) };
 }
@@ -33,6 +33,7 @@ function pierceHole(b, pt, dir, w, speed) {
   const h = { c: new THREE.Vector3(pl.x / S.x, pl.y / S.y, pl.z / S.z), dir: new THREE.Vector3(dl.x, dl.y, dl.z),
               depth: 0.05 * Math.min(1, size / 3), crumple: 0.03, R: hole * 1.8, S };      // a little puckering round the hole
   b.sheet.dent(h, hole, b.windows);
+  b.owner.cornerDamage(b, h.c, w.corner, 1);                           // a hole near an edge or corner makes it sag
   b.damage += w.wear;
   body.wakeUp();
   if (w.nudge) body.applyImpulse(new CANNON.Vec3(dir.x, dir.y, dir.z).scale(speed * w.mass * w.nudge), rel);   // a small shiver, not a shove

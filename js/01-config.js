@@ -22,6 +22,7 @@ const WEAPONS = {
                 pierce: 5,          // sheets of paper it can cross before it stops (a hollow block = 2 sheets: in and out)
                 hole: 0.5,          // hole radius in world units (scaled by the paper's tearSize, capped for small blocks)
                 wear: 0.04,         // damage added to a block per sheet pierced
+                corner: 14,         // how hard each hole counts toward crushing a nearby edge/corner (like an impact severity; see CORNER in 06b-corners.js)
                 nudge: 0.04,        // tiny shove per sheet, as a share of its momentum (0 = none)
                 spin: 16,           // rad/s about its own length (cosmetic)
                 dark: 0x9a2a2a, light: 0xd9534f, stripe: '#c0392b', gunScale: 1.2 },
