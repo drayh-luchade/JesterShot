@@ -37,7 +37,7 @@ window.addEventListener('keydown', e => {
 const AIM_STEPS = 600, AIM_H = 1 / 120;                                  // up to 5 s of flight, in the physics step
 const aimGeo = new THREE.BufferGeometry();
 aimGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(AIM_STEPS * 3 + 3), 3));
-const aimLine = new THREE.Line(aimGeo, new THREE.LineDashedMaterial({ color: 0xfff1b8, dashSize: 0.8, gapSize: 0.5, transparent: true, opacity: 0.9, fog: false, depthWrite: false }));
+const aimLine = new THREE.Line(aimGeo, new THREE.LineDashedMaterial({ color: 0x3df2ff, dashSize: 0.8, gapSize: 0.5, transparent: true, opacity: 1, fog: false, depthWrite: false }));
 aimLine.frustumCulled = false; aimLine.renderOrder = 5; aimLine.visible = false; scene.add(aimLine);
 const ringGeo = new THREE.RingGeometry(0.3, 0.5, 24);
 const mkRing = (color, op) => { const m = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide, transparent: true, opacity: op, depthTest: false, fog: false })); m.renderOrder = 6; m.visible = false; scene.add(m); return m; };
