@@ -3,9 +3,50 @@
 // Aim distance is NOT strength. Strength (power) scales how fast the shot leaves the muzzle. Aim distance is how far along the crosshair line the
 // shot is aimed to ARRIVE: the launch angle is worked out so the shot passes through that point (allowing for gravity). "Auto" aims at whatever
 // the crosshair touches, as before. Set it nearer to drop a shot short of something, or farther to lob over it; the dashed line shows where it goes.
+// The slider's top end is the farthest the current weapon can actually reach (speed^2 / gravity), so a higher value always means a farther shot.
+// The shooter's tube tilts to point along the shot, so it visibly leaves the tube.
 game.range = null;                                                      // null = auto; otherwise a distance in world units from the camera
-const RANGE = { min: 3, max: 200 };
+const RANGE = { min: 5, max: 200 };                                    // max is replaced by the weapon's real reach (see maxReach)
 const byId = id => document.getElementById(id);                         // ($ lives in a later file, so it isn't available while this one loads)
+
+/* ----- ballistics: the launch direction that really passes through the target ----- */
+const shotLead = w => 0.1 + 0.2 * w.radius;                              // how far past the tube's tip the shot's centre starts
+const BALL_H = 1 / 120, BALL_DAMP = Math.pow(1 - 0.01, BALL_H);          // the physics step and the shot body's linearDamping
+
+/** Height of a shot launched at elevation `th` when it has travelled horizontal distance x (drag included); null if it hits the ground first. */
+function heightAt(th, speed, x, y0) {
+  let px = 0, py = 0, vx = Math.cos(th) * speed, vy = Math.sin(th) * speed;
+  const g = world.gravity.y;
+  for (let i = 0; i < 1500; i++) {
+    vx *= BALL_DAMP; vy *= BALL_DAMP; vy += g * BALL_H;
+    const nx = px + vx * BALL_H, ny = py + vy * BALL_H;
+    if (nx >= x) return py + (ny - py) * ((x - px) / (nx - px));
+    px = nx; py = ny;
+    if (py < y0 - 400) return null;
+  }
+  return null;
+}
+/** Direction to launch from `muzzle` so the shot passes through `target`. If the target is out of reach it lobs at the best angle (falls short). */
+function solveLaunch(muzzle, target, speed) {
+  const g = -world.gravity.y;
+  const dx = target.x - muzzle.x, dz = target.z - muzzle.z, dy = target.y - muzzle.y;
+  const x = Math.max(1e-3, Math.hypot(dx, dz)), hx = dx / x, hz = dz / x;
+  const v2 = speed * speed, disc = v2 * v2 - g * (g * x * x + 2 * dy * v2);
+  const reachable = disc >= 0;
+  let th = reachable ? Math.atan2(v2 - Math.sqrt(disc), g * x) : Math.atan2(v2, g * x);   // flat arc; or the best angle when out of reach
+  if (reachable) for (let i = 0; i < 3; i++) {                           // the analytic answer ignores drag: nudge it with a quick simulation
+    const h = heightAt(th, speed, x, dy);
+    if (h == null) break;
+    th -= (h - dy) * Math.cos(th) * Math.cos(th) / x;
+  }
+  return { dir: new THREE.Vector3(Math.cos(th) * hx, Math.sin(th), Math.cos(th) * hz), reachable, th };
+}
+/** How far the current weapon can reach at all (a 45-degree lob), so the slider never offers a distance it can't deliver. */
+function maxReach(w) {
+  if (w.boomerang) return 80;
+  const v = w.speed * game.power;
+  return Math.max(RANGE.min + 5, Math.min(260, 0.94 * v * v / 9.82));
+}
 
 function aimTarget() {                                                  // the point fireWeapon() aims through
   if (game.range == null) return centerTarget();
@@ -37,13 +78,11 @@ window.addEventListener('keydown', e => {
 const AIM_STEPS = 600, AIM_H = 1 / 120;                                  // up to 5 s of flight, in the physics step
 const aimGeo = new THREE.BufferGeometry();
 aimGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(AIM_STEPS * 3 + 3), 3));
-const aimLine = new THREE.Line(aimGeo, new THREE.LineDashedMaterial({ color: 0x3df2ff, dashSize: 0.8, gapSize: 0.5, transparent: true, opacity: 1, fog: false, depthWrite: false }));
+const aimLine = new THREE.Line(aimGeo, new THREE.LineDashedMaterial({ color: 0xfff1b8, dashSize: 0.8, gapSize: 0.5, transparent: true, opacity: 0.9, fog: false, depthWrite: false }));
 aimLine.frustumCulled = false; aimLine.renderOrder = 5; aimLine.visible = false; scene.add(aimLine);
 const ringGeo = new THREE.RingGeometry(0.3, 0.5, 24);
 const mkRing = (color, op) => { const m = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide, transparent: true, opacity: op, depthTest: false, fog: false })); m.renderOrder = 6; m.visible = false; scene.add(m); return m; };
 const aimHit = mkRing(0xffd24a, 0.95), aimMarks = Array.from({ length: 6 }, () => mkRing(0xff8a65, 0.8));
-const aimPoint = new THREE.Mesh(new THREE.OctahedronGeometry(0.35), new THREE.MeshBasicMaterial({ color: 0x6fd0ff, depthTest: false, transparent: true, opacity: 0.9, fog: false }));
-aimPoint.renderOrder = 6; aimPoint.visible = false; scene.add(aimPoint);   // shows the chosen aim distance when it isn't auto
 
 const _ap = new THREE.Vector3(), _av = new THREE.Vector3(), _aq = new THREE.Vector3(), _ad = new THREE.Vector3(), _an = new THREE.Vector3();
 const aimRay = new THREE.Raycaster();
@@ -57,16 +96,15 @@ function segPointDist2(a, b, p) {                                       // squar
 /** Follow one shot's path like fireWeapon + the physics would, and stop where it hits something (a piercing shot goes on through `pierce` sheets). */
 function aimPath(w, muzzle, target, speed) {
   const pos = aimGeo.attributes.position.array, marks = [];
-  let n = 0, end = null;
+  let n = 0, end = null, dir = null;
   const push = p => { pos[n * 3] = p.x; pos[n * 3 + 1] = p.y; pos[n * 3 + 2] = p.z; n++; };
   if (w.boomerang) {                                                    // the bananarang's loop (no collisions are previewed)
     const bn = bananaParams(w, muzzle, target, speed);
     for (let i = 0; i <= 90; i++) push(bananaPos(bn, bn.T * i / 90, _aq));
-    return { n, end: null, marks };
+    return { n, end: null, marks, dir: null };
   }
-  const t = muzzle.distanceTo(target) / speed, adj = target.clone(); adj.y += 0.5 * 9.82 * t * t;    // same gravity compensation as fireWeapon
-  const dir = adj.sub(muzzle).normalize();
-  _ap.copy(muzzle).addScaledVector(dir, 0.4 + w.radius); _av.copy(dir).multiplyScalar(speed);
+  dir = solveLaunch(muzzle, target, speed).dir;                          // same launch as fireWeapon
+  _ap.copy(muzzle).addScaledVector(dir, shotLead(w)); _av.copy(dir).multiplyScalar(speed);
   const g = world.gravity.y, damp = Math.pow(1 - 0.01, AIM_H);           // the shot body's linearDamping
   const cands = [];                                                      // blocks near the path are worth a ray test; ground and floor always
   for (const tw of towers) for (const b of tw.blocks) if (b.body) {
@@ -97,22 +135,34 @@ function aimPath(w, muzzle, target, speed) {
     if (stopped) break;
     push(_ap);
   }
-  return { n, end, marks };
+  return { n, end, marks, dir };
 }
 
-let aimFrame = 0, aimLabel = '';
+/** Turn the tube to point along the shot (dir in world space), or back to straight ahead (null); eased so it doesn't snap. */
+const _gq = new THREE.Quaternion(), _gm = new THREE.Matrix4(), _gv = new THREE.Vector3(), _gFwd = new THREE.Vector3(0, 0, -1);
+function tiltGun(dir) {
+  if (dir) { _gm.copy(camera.matrixWorld).invert(); _gv.copy(dir).transformDirection(_gm); _gq.setFromUnitVectors(_gFwd, _gv); }
+  else _gq.identity();
+  gun.quaternion.slerp(_gq, 0.35);
+}
+
+let aimFrame = 0, aimLabel = '', aimMax = 0, aimDir = null;
 function updateAimPreview() {
   const on = game.mode === 'fight';
-  aimLine.visible = on; if (!on) { aimHit.visible = false; aimPoint.visible = false; aimMarks.forEach(m => m.visible = false); return; }
-  if ((aimFrame++ & 1) && !game._aimDirty) return;                       // every other frame is plenty
+  aimLine.visible = on; if (!on) { aimHit.visible = false; aimMarks.forEach(m => m.visible = false); tiltGun(null); return; }
+  const w = WEAPONS[game.weapon];
+  if (w.boomerang || !aimDir) tiltGun(null); else tiltGun(aimDir);       // (keeps easing every frame, even when the path isn't recomputed)
+  if ((aimFrame++ & 1) && !game._aimDirty) return;                       // the path itself only needs recomputing every other frame
   camera.rotation.set(pitch, yaw, 0); camera.updateMatrixWorld(true);
-  const w = WEAPONS[game.weapon], muzzle = gun.localToWorld(MUZZLE.clone()), speed = w.speed * game.power;
+  const muzzle = gun.localToWorld(MUZZLE.clone()), speed = w.speed * game.power;
+  const mr = maxReach(w);                                                // the slider can't go past what this weapon can reach at this strength
+  if (mr !== aimMax) { aimMax = mr; RANGE.max = mr; byId('ds').max = mr; if (game.range != null && game.range > mr) setRange(mr); }
   const target = aimTarget();
   const r = aimPath(w, muzzle, target, speed);
+  aimDir = r.dir;
   aimGeo.setDrawRange(0, r.n); aimGeo.attributes.position.needsUpdate = true; aimLine.computeLineDistances();
   aimMarks.forEach((m, i) => { if (r.marks[i]) placeRing(m, r.marks[i].point, r.marks[i].normal); else m.visible = false; });
   if (r.end) placeRing(aimHit, r.end.point, r.end.normal); else aimHit.visible = false;
-  aimPoint.visible = game.range != null; if (aimPoint.visible) { aimPoint.position.copy(target); aimPoint.rotation.y += 0.05; }
   const dist = camera.position.distanceTo(target);
   if (game.range == null) byId('ds').value = Math.min(RANGE.max, Math.max(RANGE.min, dist));      // slider follows the crosshair while auto
   const label = game.range == null ? `Auto · ${dist.toFixed(0)}` : dist.toFixed(0);

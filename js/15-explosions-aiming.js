@@ -75,10 +75,7 @@ function fireWeapon() {
   const speed = w.speed * game.power;
   if (w.boomerang) { launchBanana(w, muzzle, target, speed); return; }
 
-  const t = muzzle.distanceTo(target) / speed;                       // cancel gravity drop over the flight time
-  const adj = target.clone();
-  adj.y += 0.5 * 9.82 * t * t;
-  const dir = adj.sub(muzzle).normalize();
+  const dir = solveLaunch(muzzle, target, speed).dir;                // the exact launch angle for a shot that passes through the target (15b-aim-preview.js)
 
   // Tri-shot throws a triangle of three peas (one up, two low) that fans out; every other weapon fires one.
   const right = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0).normalize();
@@ -86,7 +83,7 @@ function fireWeapon() {
   const pattern = w.volley ? [[0, 0.5], [-1, -0.5], [1, -0.5]] : [[0, 0]], sp = w.volley ? game.spread : 0;
   for (const [ox, oy] of pattern) {
     const d = dir.clone().addScaledVector(right, ox * sp).addScaledVector(up, oy * sp).normalize();
-    const start = muzzle.clone().addScaledVector(d, 0.4 + w.radius);
+    const start = muzzle.clone().addScaledVector(d, shotLead(w));
     if (w.volley) start.addScaledVector(right, ox * 0.5).addScaledVector(up, oy * 0.5);    // keep the three peas from overlapping at launch
     launchShot(w, start, d, speed);
   }

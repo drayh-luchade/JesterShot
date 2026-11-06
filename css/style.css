@@ -64,7 +64,7 @@
   .sw { display: inline-block; width: 10px; height: 10px; margin-right: 5px; border: 1px solid #4a4036; }
   .weapon.active { border-color: #d9674a; background: #fff3dc; }
   .weapon .cd { position: absolute; left: 0; bottom: 0; width: 100%; height: 4px; background: #d9674a; transform-origin: left; transform: scaleX(0); }
-  #cross { position: fixed; left: 50%; top: 50%; width: 22px; height: 22px; margin: -11px 0 0 -11px; pointer-events: none; }
+  #cross { display: none; position: fixed; left: 50%; top: 50%; width: 22px; height: 22px; margin: -11px 0 0 -11px; pointer-events: none; }
   #cross::before, #cross::after { content: ""; position: absolute; background: #3df2ff; opacity: 1;
     box-shadow: 0 0 0 1px rgba(0,0,0,.7), 0 0 8px rgba(61,242,255,.95); }
   #cross::before { left: 9px; top: 0; width: 3px; height: 22px; }
