@@ -40,5 +40,6 @@ renderer.setAnimationLoop(() => {
   updateChunks(dt);
   updateHUD();
   updatePad();
+  updateAimPreview();                                                 // dashed flight path + aim distance readout
   renderer.render(scene, camera);
 });

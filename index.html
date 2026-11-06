@@ -20,6 +20,7 @@
 <div id="weapons"></div>
 <div id="palette"></div>
 <div id="strength"><label for="pw">Strength <b id="pwVal">×1.00</b></label><input id="pw" type="range" min="0.5" max="3" step="0.05" value="1">
+  <div id="distRow"><label for="ds">Aim distance <b id="dsVal">Auto</b> <button id="dsAuto" title="Back to aiming at whatever the crosshair touches (\)">Auto</button></label><input id="ds" type="range" min="3" max="200" step="0.5" value="40"></div>
   <div id="spreadRow"><label for="sp">Tri-shot spread <b id="spVal"></b></label><input id="sp" type="range" min="0" max="0.1" step="0.005" value="0.02"></div></div>
 <div id="dragCard"></div>
 <div id="placeInfo"></div>
@@ -34,7 +35,7 @@
   <button class="pb" data-k="KeyD" data-alt="ArrowRight" title="Right (D / →)" style="grid-area:2/3">▶</button>
   <button class="pb" data-k="KeyS" title="Back (S)" style="grid-area:3/2">▼</button>
 </div>
-<div id="hint">Hold left-click + drag: look · WASD: move · Space / E / ↑: up · C / Q / ↓: down · Shift: fast · Right-click: fire · 1 / 2 / 3 or wheel: weapon · F: shove</div>
+<div id="hint">Hold left-click + drag: look · WASD: move · Space / E / ↑: up · C / Q / ↓: down · Shift: fast · Right-click: fire · 1 / 2 / 3 or wheel: weapon · − / =: aim nearer / farther (\ = auto) · F: shove</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <!-- 3D models: one file per model, each fills window.MODEL_DATA.<key>. See models/README.md to add more. -->
@@ -77,6 +78,7 @@
 <script defer src="js/13-props.js"></script>
 <script defer src="js/14-watermelon.js"></script>
 <script defer src="js/15-explosions-aiming.js"></script>
+<script defer src="js/15b-aim-preview.js"></script>
 <script defer src="js/16-hud.js"></script>
 <script defer src="js/17-builder.js"></script>
 <script defer src="js/18-ui-loop.js"></script>

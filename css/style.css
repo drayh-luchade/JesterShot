@@ -54,6 +54,9 @@
               border: 2px solid #b9ad98; border-radius: 8px; color: #4a4036; font-size: 12px; user-select: none; }
   #strength input { width: 150px; display: block; margin-top: 4px; accent-color: #d9674a; }
   #spreadRow { display: none; margin-top: 8px; }
+  #distRow { margin-top: 8px; }
+  #distRow button { font: inherit; font-size: 11px; padding: 1px 7px; margin-left: 4px; border: 1px solid #c9b79c; border-radius: 9px; background: #fff; cursor: pointer; }
+  #distRow button.on { background: #d9674a; border-color: #d9674a; color: #fff; }
   #weapons.off { display: none; }
   #palette { position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%); display: none; flex-direction: column; gap: 8px; align-items: center; max-height: 46vh; overflow-y: auto; }
   #palette.on { display: flex; }

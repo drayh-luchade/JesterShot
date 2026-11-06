@@ -70,7 +70,7 @@ function fireWeapon() {
   game.lastFire[w.id] = now;
   camera.rotation.set(pitch, yaw, 0);
   camera.updateMatrixWorld(true);
-  const target = centerTarget();
+  const target = aimTarget();                                        // crosshair hit, or the chosen aim distance (see 15b-aim-preview.js)
   const muzzle = gun.localToWorld(MUZZLE.clone());
   const speed = w.speed * game.power;
   if (w.boomerang) { launchBanana(w, muzzle, target, speed); return; }
@@ -123,7 +123,7 @@ function launchShot(w, start, dir, speed) {
 // A kinematic body (it can push things but nothing pushes it) is driven along an ellipse: it starts at the muzzle heading sideways, swings out
 // to the crosshair point, and curves back. It has no collision response; each touch instead gives a measured shove (see onShotHit), while the
 // block's own listener applies the dent and tear. The curve of the banana is laid flat so it spins like a boomerang.
-function launchBanana(w, muzzle, target, speed) {
+function bananaParams(w, muzzle, target, speed) {                    // the loop's shape: shared by the throw and the aim preview
   const O = muzzle.clone(), D = new THREE.Vector3(target.x - O.x, 0, target.z - O.z);
   let L = D.length();
   if (L < 8) { D.set(-Math.sin(yaw), 0, -Math.cos(yaw)); L = 30; } else D.divideScalar(L);
@@ -132,6 +132,14 @@ function launchBanana(w, muzzle, target, speed) {
   const a = Math.min(16, Math.max(4, 0.32 * L)), dy = Math.max(-6, Math.min(8, target.y - O.y));
   const perim = 2 * Math.PI * Math.sqrt((a * a + (L / 2) * (L / 2)) / 2);
   const T = Math.min(5.5, Math.max(1.8, perim / speed));              // seconds for the whole loop
+  return { O, D, R, L, a, dy, T };
+}
+function bananaPos(bn, age, out) {                                     // where the loop is at `age` seconds
+  const th = 2 * Math.PI * age / bn.T, c = Math.cos(th), sn = Math.sin(th), half = bn.L / 2;
+  return out.set(bn.O.x + bn.D.x * half * (1 - c) + bn.R.x * bn.a * sn, bn.O.y + bn.dy * (1 - c) / 2, bn.O.z + bn.D.z * half * (1 - c) + bn.R.z * bn.a * sn);
+}
+function launchBanana(w, muzzle, target, speed) {
+  const bp = bananaParams(w, muzzle, target, speed), { O, D, R, L, a, dy, T } = bp;
   const body = new CANNON.Body({ mass: 0, type: CANNON.Body.KINEMATIC, shape: new CANNON.Sphere(w.radius) });
   body.isPea = true;                                                   // counts as a projectile for dents
   body.collisionResponse = false;
@@ -157,9 +165,7 @@ function steerBananas(dt) {                                           // runs be
     bn.age += dt;
     if (bn.age >= bn.T) { removeShot(shots.splice(i, 1)[0]); continue; }
     const th = 2 * Math.PI * bn.age / bn.T, c = Math.cos(th), sn = Math.sin(th), k = 2 * Math.PI / bn.T, half = bn.L / 2;
-    s.body.position.set(bn.O.x + bn.D.x * half * (1 - c) + bn.R.x * bn.a * sn,
-                        bn.O.y + bn.dy * (1 - c) / 2,
-                        bn.O.z + bn.D.z * half * (1 - c) + bn.R.z * bn.a * sn);
+    bananaPos(bn, bn.age, s.body.position);
     s.body.velocity.set((bn.D.x * half * sn + bn.R.x * bn.a * c) * k, (bn.dy / 2) * sn * k, (bn.D.z * half * sn + bn.R.z * bn.a * c) * k);
     s.body.quaternion.setFromEuler(0, th * 6, 0);                      // spins three full turns per loop
   }
